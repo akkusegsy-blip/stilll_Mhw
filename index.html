@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JARVIS Voice Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0f1e 0%, #1a1f2f 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #e0e0e0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            background: rgba(18, 25, 40, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 30px 30px 0 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(0, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated background effect */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 255, 255, 0.05) 0%, transparent 50%);
+            animation: rotate 20s linear infinite;
+            z-index: 0;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            letter-spacing: 2px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #00ff00;
+            box-shadow: 0 0 10px #00ff00;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Visualizer */
+        .visualizer-container {
+            position: relative;
+            z-index: 1;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            margin: 20px 0;
+        }
+
+        .bar {
+            width: 8px;
+            height: 30px;
+            background: linear-gradient(180deg, #00ffff, #ff00ff);
+            border-radius: 4px;
+            animation: soundWave 1.5s ease-in-out infinite;
+            transform-origin: bottom;
+        }
+
+        .bar:nth-child(1) { animation-delay: 0.1s; }
+        .bar:nth-child(2) { animation-delay: 0.2s; }
+        .bar:nth-child(3) { animation-delay: 0.3s; }
+        .bar:nth-child(4) { animation-delay: 0.4s; }
+        .bar:nth-child(5) { animation-delay: 0.5s; }
+        .bar:nth-child(6) { animation-delay: 0.6s; }
+        .bar:nth-child(7) { animation-delay: 0.7s; }
+        .bar:nth-child(8) { animation-delay: 0.8s; }
+
+        @keyframes soundWave {
+            0%, 100% { height: 20px; }
+            50% { height: 60px; }
+        }
+
+        /* Main Content */
+        .content {
+            flex: 1;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .conversation {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(0, 255, 255, 0.1);
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-message {
+            align-items: flex-end;
+        }
+
+        .jarvis-message {
+            align-items: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .user-message .message-bubble {
+            background: linear-gradient(135deg, #00ffff, #00ccff);
+            color: #000;
+            border-bottom-right-radius: 4px;
+        }
+
+        .jarvis-message .message-bubble {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            color: #fff;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-time {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            margin: 5px 10px;
+        }
+
+        /* Control Buttons */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: auto;
+        }
+
+        .main-controls {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .control-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(5px);
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        .control-btn.active {
+            background: linear-gradient(135deg, #00ffff, #ff00ff);
+            color: #000;
+            border-color: #fff;
+        }
+
+        .mic-btn {
+            width: 90px;
+            height: 90px;
+            font-size: 36px;
+            background: linear-gradient(135deg, #00ffff, #ff00ff);
+            color: #000;
+            border: none;
+            animation: glow 2s infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(255, 0, 255, 0.5); }
+        }
+
+        .secondary-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .small-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(5px);
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+        }
+
+        .voice-status {
+            text-align: center;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 5px;
+        }
+
+        /* Suggestions */
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 15px 0;
+            justify-content: center;
+        }
+
+        .suggestion-chip {
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 20px;
+            font-size: 12px;
+            color: #00ffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .suggestion-chip:active {
+            background: rgba(0, 255, 255, 0.2);
+        }
+
+        /* Hidden class */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Scrollbar */
+        .conversation::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .conversation::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .conversation::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #00ffff, #ff00ff);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">JARVIS</div>
+            <div class="status-dot" id="statusDot"></div>
+        </div>
+
+        <div class="visualizer-container" id="visualizer">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+
+        <div class="content">
+            <div class="conversation" id="conversation">
+                <div class="message jarvis-message">
+                    <div class="message-bubble">
+                        Hello sir, I am JARVIS. How may I assist you today?
+                    </div>
+                    <div class="message-time">Just now</div>
+                </div>
+            </div>
+
+            <div class="suggestions" id="suggestions">
+                <span class="suggestion-chip" data-command="time">What's the time?</span>
+                <span class="suggestion-chip" data-command="date">Today's date</span>
+                <span class="suggestion-chip" data-command="weather">Weather</span>
+                <span class="suggestion-chip" data-command="joke">Tell a joke</span>
+                <span class="suggestion-chip" data-command="news">Latest news</span>
+                <span class="suggestion-chip" data-command="search">Search web</span>
+            </div>
+
+            <div class="controls">
+                <div class="main-controls">
+                    <button class="control-btn" id="settingsBtn" title="Settings">⚙️</button>
+                    <button class="control-btn mic-btn" id="micBtn" title="Tap to speak">🎤</button>
+                    <button class="control-btn" id="infoBtn" title="Info">ℹ️</button>
+                </div>
+
+                <div class="secondary-controls">
+                    <button class="small-btn" id="volumeBtn" title="Toggle voice">🔊</button>
+                    <button class="small-btn" id="clearBtn" title="Clear chat">🗑️</button>
+                    <button class="small-btn" id="themeBtn" title="Toggle theme">🌙</button>
+                </div>
+
+                <div class="voice-status" id="voiceStatus">
+                    Tap the microphone to start speaking
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class JarvisAssistant {
+            constructor() {
+                this.isListening = false;
+                this.isSpeaking = true;
+                this.recognition = null;
+                this.synthesis = window.speechSynthesis;
+                this.conversation = document.getElementById('conversation');
+                this.micBtn = document.getElementById('micBtn');
+                this.voiceStatus = document.getElementById('voiceStatus');
+                this.volumeBtn = document.getElementById('volumeBtn');
+                this.clearBtn = document.getElementById('clearBtn');
+                this.themeBtn = document.getElementById('themeBtn');
+                this.settingsBtn = document.getElementById('settingsBtn');
+                this.infoBtn = document.getElementById('infoBtn');
+                this.statusDot = document.getElementById('statusDot');
+                this.suggestions = document.querySelectorAll('.suggestion-chip');
+                
+                this.initSpeechRecognition();
+                this.setupEventListeners();
+                this.addMessage('JARVIS', 'Hello sir, I am JARVIS. How may I assist you today?');
+            }
+
+            initSpeechRecognition() {
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    this.recognition = new SpeechRecognition();
+                    this.recognition.continuous = false;
+                    this.recognition.interimResults = false;
+                    this.recognition.lang = 'en-US';
+
+                    this.recognition.onstart = () => {
+                        this.isListening = true;
+                        this.micBtn.classList.add('active');
+                        this.voiceStatus.textContent = 'Listening...';
+                        this.statusDot.style.background = '#ff0000';
+                    };
+
+                    this.recognition.onend = () => {
+                        this.isListening = false;
+                        this.micBtn.classList.remove('active');
+                        this.voiceStatus.textContent = 'Tap the microphone to start speaking';
+                        this.statusDot.style.background = '#00ff00';
+                    };
+
+                    this.recognition.onresult = (event) => {
+                        const command = event.results[0][0].transcript;
+                        this.processCommand(command);
+                    };
+
+                    this.recognition.onerror = (event) => {
+                        console.error('Speech recognition error:', event.error);
+                        this.voiceStatus.textContent = 'Error: ' + event.error;
+                        this.isListening = false;
+                        this.micBtn.classList.remove('active');
+                    };
+                } else {
+                    this.voiceStatus.textContent = 'Speech recognition not supported';
+                }
+            }
+
+            setupEventListeners() {
+                this.micBtn.addEventListener('click', () => this.toggleListening());
+                this.volumeBtn.addEventListener('click', () => this.toggleVoice());
+                this.clearBtn.addEventListener('click', () => this.clearChat());
+                this.themeBtn.addEventListener('click', () => this.toggleTheme());
+                this.settingsBtn.addEventListener('click', () => this.showSettings());
+                this.infoBtn.addEventListener('click', () => this.showInfo());
+
+                this.suggestions.forEach(chip => {
+                    chip.addEventListener('click', () => {
+                        this.processCommand(chip.dataset.command);
+                    });
+                });
+            }
+
+            toggleListening() {
+                if (!this.recognition) {
+                    alert('Speech recognition is not supported in your browser');
+                    return;
+                }
+
+                if (this.isListening) {
+                    this.recognition.stop();
+                } else {
+                    this.recognition.start();
+                }
+            }
+
+            toggleVoice() {
+                this.isSpeaking = !this.isSpeaking;
+                this.volumeBtn.textContent = this.isSpeaking ? '🔊' : '🔇';
+                this.volumeBtn.style.opacity = this.isSpeaking ? '1' : '0.5';
+            }
+
+            clearChat() {
+                this.conversation.innerHTML = '';
+                this.addMessage('JARVIS', 'Chat cleared. How can I help you?');
+            }
+
+            toggleTheme() {
+                document.body.classList.toggle('dark-theme');
+                this.themeBtn.textContent = document.body.classList.contains('dark-theme') ? '☀️' : '🌙';
+            }
+
+            showSettings() {
+                this.addMessage('JARVIS', 'Settings menu - Customize your JARVIS experience');
+                // Add settings modal here
+            }
+
+            showInfo() {
+                this.addMessage('JARVIS', 'JARVIS Voice Assistant v1.0 - Your personal AI assistant');
+            }
+
+            processCommand(command) {
+                // Add user message to conversation
+                this.addMessage('User', command);
+                
+                // Process the command
+                let response = '';
+                command = command.toLowerCase();
+
+                if (command.includes('time') || command.includes('what time')) {
+                    const now = new Date();
+                    response = `The current time is ${now.toLocaleTimeString()}`;
+                }
+                else if (command.includes('date') || command.includes('today')) {
+                    const now = new Date();
+                    response = `Today's date is ${now.toLocaleDateString()}`;
+                }
+                else if (command.includes('weather')) {
+                    response = 'I cannot access weather data directly. Would you like me to search for weather in your area?';
+                }
+                else if (command.includes('joke')) {
+                    const jokes = [
+                        'Why do programmers prefer dark mode? Because light attracts bugs!',
+                        'Why did the JavaScript developer go broke? Because he lost his prototype chain!',
+                        'What do you call a fake noodle? An impasta!',
+                        'Why don\'t scientists trust atoms? Because they make up everything!'
+                    ];
+                    response = jokes[Math.floor(Math.random() * jokes.length)];
+                }
+                else if (command.includes('news')) {
+                    response = 'I can help you find news. What topic are you interested in?';
+                }
+                else if (command.includes('search') || command.includes('google')) {
+                    const searchTerm = command.replace('search', '').replace('google', '').trim();
+                    if (searchTerm) {
+                        window.open(`https://www.google.com/search?q=${encodeURIComponent(searchTerm)}`, '_blank');
+                        response = `Searching for "${searchTerm}" on Google`;
+                    } else {
+                        response = 'What would you like me to search for?';
+                    }
+                }
+                else if (command.includes('hello') || command.includes('hi')) {
+                    response = 'Hello sir! How can I assist you today?';
+                }
+                else if (command.includes('thank')) {
+                    response = 'You\'re welcome, sir! Is there anything else I can help with?';
+                }
+                else if (command.includes('who are you')) {
+                    response = 'I am JARVIS, your personal voice assistant, inspired by Tony Stark\'s AI.';
+                }
+                else if (command.includes('calculate') || command.includes('calculator')) {
+                    try {
+                        const calculation = command.replace('calculate', '').replace('calculator', '').trim();
+                        const result = eval(calculation);
+                        response = `The result is ${result}`;
+                    } catch {
+                        response = 'I couldn\'t calculate that. Please try a valid expression.';
+                    }
+                }
+                else if (command.includes('open youtube')) {
+                    window.open('https://youtube.com', '_blank');
+                    response = 'Opening YouTube';
+                }
+                else if (command.includes('open google')) {
+                    window.open('https://google.com', '_blank');
+                    response = 'Opening Google';
+                }
+                else {
+                 
